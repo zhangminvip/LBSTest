@@ -13,7 +13,9 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.MapView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,32 +27,34 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView positionText;
     List<String> permissionList ;
+    private MapView mMapView;
+    private BaiduMap mBaiduMap;
+    private boolean isFirstLocate = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         mLocationClient = new LocationClient(getApplicationContext());
         mLocationClient.registerLocationListener(new MyLocationListener());
+        SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
         initView();
         initEvent();
+
         authority();
-
-
-
-
-
-
-
 
     }
 
     private void initView(){
         positionText = (TextView)findViewById(R.id.position_text_view);
+        mMapView = (MapView)findViewById(R.id.bmapView);
     }
 
     private void initEvent(){
         permissionList = new ArrayList<>();
+        mBaiduMap = mMapView.getMap();
+
     }
 
     // 申请权限
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private void initLocation(){
         LocationClientOption option = new LocationClientOption();
         option.setScanSpan(5000);
+        option.setIsNeedAddress(true);
         mLocationClient.setLocOption(option);
     }
 
@@ -98,6 +103,11 @@ public class MainActivity extends AppCompatActivity {
             final StringBuilder currentPosition = new StringBuilder();
             currentPosition.append("纬度： ").append(location.getLatitude()).append("\n");
             currentPosition.append("经度： ").append(location.getLongitude()).append("\n");
+            currentPosition.append("国家： ").append(location.getCountry()).append("\n");
+            currentPosition.append("省： ").append(location.getProvince()).append("\n");
+            currentPosition.append("市： ").append(location.getCity()).append("\n");
+            currentPosition.append("区： ").append(location.getDistrict()).append("\n");
+            currentPosition.append("街道： ").append(location.getStreet()).append("\n");
             currentPosition.append("定位方式： ");
             if(location.getLocType() == BDLocation.TypeGpsLocation){
                 currentPosition.append("GPS");
@@ -119,11 +129,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+        mMapView.onResume();
+    }
+
+    @Override
+    protected  void onPause(){
+        super.onPause();
+        mMapView.onPause();
+    }
+
 
     @Override
     protected void onDestroy(){
         super.onDestroy();
         mLocationClient.stop();
+        mMapView.onDestroy();
     }
 
 
